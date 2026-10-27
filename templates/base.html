@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>{% block title %}AeroPredict | Indian Domestic Flight Delay Analytics{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f5fa',
+                            100: '#e1ecf5',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            800: '#0c4a6e',
+                            900: '#0a2e4c',
+                        },
+                        navy: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            -webkit-font-smoothing: antialiased;
+        }
+        .card-panel {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+        }
+        .card-panel-hover {
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .card-panel-hover:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-50 bg-white border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                
+                <!-- Logo & Brand -->
+                <div class="flex items-center space-x-3">
+                    <a href="{{ url_for('dashboard') }}" class="flex items-center space-x-3 group">
+                        <div class="w-9 h-9 rounded-lg bg-slate-900 flex items-center justify-center text-white shadow-xs">
+                            <i class="fa-solid fa-plane-departure text-sm"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold text-base tracking-tight text-slate-900">AeroPredict</span>
+                                <span class="bg-slate-100 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded border border-slate-200">
+                                    Tamil Nadu &amp; India
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 font-normal">Domestic Flight Delay Analytics</p>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Nav Links -->
+                <nav class="hidden md:flex items-center space-x-1">
+                    <a href="{{ url_for('dashboard') }}" 
+                       class="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors {% if active_page == 'dashboard' %}bg-slate-100 text-slate-900 border border-slate-300/80{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+                        <i class="fa-solid fa-chart-line mr-1.5 text-slate-500"></i> Overview Dashboard
+                    </a>
+                    
+                    <a href="{{ url_for('predict_page') }}" 
+                       class="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors {% if active_page == 'predict' %}bg-slate-100 text-slate-900 border border-slate-300/80{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+                        <i class="fa-solid fa-calculator mr-1.5 text-slate-500"></i> Delay Predictor
+                    </a>
+
+                    <a href="{{ url_for('routes_page') }}" 
+                       class="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors {% if active_page == 'routes' %}bg-slate-100 text-slate-900 border border-slate-300/80{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+                        <i class="fa-solid fa-route mr-1.5 text-slate-500"></i> Routes &amp; Airports
+                    </a>
+
+                    <a href="{{ url_for('guide_page') }}" 
+                       class="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors {% if active_page == 'guide' %}bg-slate-100 text-slate-900 border border-slate-300/80{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-50{% endif %}">
+                        <i class="fa-solid fa-graduation-cap mr-1.5 text-slate-500"></i> Model &amp; Viva Guide
+                    </a>
+                </nav>
+
+                <!-- Action CTA -->
+                <div class="flex items-center space-x-3">
+                    <a href="{{ url_for('predict_page') }}" class="hidden sm:inline-flex items-center px-3.5 py-1.5 text-xs font-semibold rounded-md text-white bg-slate-900 hover:bg-slate-800 transition-colors shadow-xs">
+                        <i class="fa-solid fa-calculator mr-1.5"></i> Predict Flight
+                    </a>
+
+                    <!-- Mobile Menu Button -->
+                    <button id="mobileMenuBtn" class="md:hidden p-2 rounded-md text-slate-500 hover:text-slate-900 hover:bg-slate-100 focus:outline-none">
+                        <i class="fa-solid fa-bars text-sm"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Mobile Nav Menu -->
+        <div id="mobileMenu" class="hidden md:hidden border-t border-slate-200 px-4 pt-2 pb-4 space-y-1 bg-white">
+            <a href="{{ url_for('dashboard') }}" class="block px-3 py-2 rounded-md text-xs font-semibold {% if active_page == 'dashboard' %}bg-slate-100 text-slate-900{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                <i class="fa-solid fa-chart-line mr-2"></i> Overview Dashboard
+            </a>
+            <a href="{{ url_for('predict_page') }}" class="block px-3 py-2 rounded-md text-xs font-semibold {% if active_page == 'predict' %}bg-slate-100 text-slate-900{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                <i class="fa-solid fa-calculator mr-2"></i> Flight Delay Predictor
+            </a>
+            <a href="{{ url_for('routes_page') }}" class="block px-3 py-2 rounded-md text-xs font-semibold {% if active_page == 'routes' %}bg-slate-100 text-slate-900{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                <i class="fa-solid fa-route mr-2"></i> Routes &amp; Airports Explorer
+            </a>
+            <a href="{{ url_for('guide_page') }}" class="block px-3 py-2 rounded-md text-xs font-semibold {% if active_page == 'guide' %}bg-slate-100 text-slate-900{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                <i class="fa-solid fa-graduation-cap mr-2"></i> Model &amp; Guide Viva Notes
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Clean Corporate Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-16 text-slate-600 text-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="space-y-2 md:col-span-2">
+                    <div class="flex items-center space-x-2">
+                        <span class="font-bold text-slate-900 text-sm">AeroPredict Indian Aviation Analytics</span>
+                        <span class="bg-slate-100 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded border border-slate-200">
+                            Tamil Nadu Network
+                        </span>
+                    </div>
+                    <p class="text-slate-500 text-xs leading-relaxed max-w-lg">
+                        End-to-end Machine Learning system predicting domestic flight delays across Coimbatore (CJB), Chennai (MAA), Madurai (IXM), Tiruchirappalli (TRZ) and major connecting metros. Developed in accordance with Directorate General of Civil Aviation (DGCA) 15-minute standard punctuality criteria.
+                    </p>
+                </div>
+
+                <div>
+                    <h4 class="text-slate-900 font-semibold mb-2 text-xs uppercase tracking-wider">Aviation Hubs</h4>
+                    <ul class="space-y-1 text-slate-600 text-xs">
+                        <li>Coimbatore (CJB) - Peelamedu</li>
+                        <li>Chennai (MAA) - Meenambakkam</li>
+                        <li>Madurai (IXM) &amp; Trichy (TRZ)</li>
+                        <li>Kempegowda Bengaluru (BLR)</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-slate-900 font-semibold mb-2 text-xs uppercase tracking-wider">Evaluation &amp; Models</h4>
+                    <ul class="space-y-1 text-slate-600 text-xs">
+                        <li>Random Forest Classifier (Balanced)</li>
+                        <li>XGBoost Classifier (Gradient Boosted)</li>
+                        <li>Delay Duration Regressor (MAE ~10.5m)</li>
+                        <li>REST API Enabled (/api/predict)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-200 mt-6 pt-4 flex flex-col sm:flex-row justify-between items-center text-slate-500 text-[11px]">
+                <p>&copy; 2025-2026 Flight Delay Prediction Project. Designed for College Project &amp; Viva-Voce Evaluation.</p>
+                <p class="mt-1 sm:mt-0 font-medium">Standard DGCA 15-Minute Threshold &bull; Authentic Domestic Data</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,15 @@
+iata_code,name,city,state,type,lat,lon
+CJB,Coimbatore International Airport,Coimbatore,Tamil Nadu,International,11.0298,77.0434
+MAA,Chennai International Airport,Chennai,Tamil Nadu,Major Hub,12.9941,80.1709
+IXM,Madurai Airport,Madurai,Tamil Nadu,Customs/Domestic,9.8345,78.0934
+TRZ,Tiruchirappalli International Airport,Tiruchirappalli,Tamil Nadu,International,10.7654,78.7097
+TCR,Tuticorin Airport,Thoothukudi,Tamil Nadu,Domestic,8.7239,78.0264
+SXV,Salem Airport,Salem,Tamil Nadu,Domestic,11.7833,78.065
+BLR,Kempegowda International Airport,Bengaluru,Karnataka,Major Hub,13.1986,77.7066
+BOM,Chhatrapati Shivaji Maharaj International Airport,Mumbai,Maharashtra,Major Hub,19.0896,72.8656
+DEL,Indira Gandhi International Airport,New Delhi,Delhi NCR,Major Hub,28.5562,77.1
+HYD,Rajiv Gandhi International Airport,Hyderabad,Telangana,Major Hub,17.2403,78.4294
+COK,Cochin International Airport,Kochi,Kerala,International,10.1518,76.393
+GOI,Dabolim / Manohar International Airport,Goa,Goa,Tourist Hub,15.3808,73.8313
+PNQ,Pune International Airport,Pune,Maharashtra,Commercial Hub,18.5822,73.9197
+CCU,Netaji Subhash Chandra Bose International Airport,Kolkata,West Bengal,Major Hub,22.6547,88.4467

@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block title %}Flight Delay Analytics Dashboard | Tamil Nadu & Indian Aviation{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <!-- Executive Header Banner -->
+    <div class="card-panel p-6 sm:p-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div class="space-y-2">
+                <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium">
+                    <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                    <span>Civil Aviation Punctuality Monitoring</span>
+                    <span class="text-slate-400">&bull;</span>
+                    <span>DGCA 15-Minute Threshold</span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+                    Domestic Flight Delay Analytics Dashboard
+                </h1>
+                <p class="text-slate-600 text-sm max-w-2xl leading-relaxed">
+                    Operational delay monitoring and performance analytics across Tamil Nadu corridors (<strong class="text-slate-900 font-semibold">Coimbatore CJB</strong>, <strong class="text-slate-900 font-semibold">Chennai MAA</strong>, <strong class="text-slate-900 font-semibold">Madurai IXM</strong>, <strong class="text-slate-900 font-semibold">Tiruchirappalli TRZ</strong>) and connecting Indian metropolitan hubs.
+                </p>
+            </div>
+            <div class="flex flex-wrap gap-2.5">
+                <a href="{{ url_for('predict_page') }}" class="inline-flex items-center px-4 py-2 rounded-lg text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-colors shadow-xs">
+                    <i class="fa-solid fa-calculator mr-1.5"></i> Launch Predictor
+                </a>
+                <a href="{{ url_for('guide_page') }}" class="inline-flex items-center px-4 py-2 rounded-lg text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 transition-colors">
+                    <i class="fa-solid fa-graduation-cap mr-1.5 text-slate-600"></i> Guide Viva Notes
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5 KPI Stat Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        
+        <!-- Total Flights -->
+        <div class="card-panel p-5 card-panel-hover">
+            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                <span>Total Flights</span>
+                <i class="fa-solid fa-plane text-slate-400"></i>
+            </div>
+            <div class="mt-2.5">
+                <div class="text-2xl font-bold text-slate-900">{{ stats.summary.total_flights }}</div>
+                <p class="text-xs text-slate-500 mt-1">Domestic Flight Records</p>
+            </div>
+        </div>
+
+        <!-- On-Time Rate -->
+        <div class="card-panel p-5 card-panel-hover">
+            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                <span>On-Time Rate</span>
+                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+            </div>
+            <div class="mt-2.5">
+                <div class="text-2xl font-bold text-slate-900">{{ stats.summary.on_time_rate }}%</div>
+                <p class="text-xs text-emerald-700 font-medium mt-1">{{ stats.summary.on_time_flights }} On-Schedule</p>
+            </div>
+        </div>
+
+        <!-- Delay Rate -->
+        <div class="card-panel p-5 card-panel-hover">
+            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                <span>Delayed Rate</span>
+                <i class="fa-solid fa-clock-rotate-left text-slate-400"></i>
+            </div>
+            <div class="mt-2.5">
+                <div class="text-2xl font-bold text-slate-900">{{ (100 - stats.summary.on_time_rate)|round(1) }}%</div>
+                <p class="text-xs text-slate-500 mt-1">{{ stats.summary.delayed_flights }} Flights (&gt;15m)</p>
+            </div>
+        </div>
+
+        <!-- Avg Delay Time -->
+        <div class="card-panel p-5 card-panel-hover">
+            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                <span>Avg Delay Time</span>
+                <i class="fa-solid fa-stopwatch text-slate-400"></i>
+            </div>
+            <div class="mt-2.5">
+                <div class="text-2xl font-bold text-slate-900">{{ stats.summary.avg_delay_min }} <span class="text-xs font-normal text-slate-500">mins</span></div>
+                <p class="text-xs text-slate-500 mt-1">For delayed sectors</p>
+            </div>
+        </div>
+
+        <!-- Most Punctual Carrier -->
+        <div class="card-panel p-5 card-panel-hover sm:col-span-2 lg:col-span-1">
+            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                <span>Top Airline</span>
+                <i class="fa-solid fa-award text-slate-400"></i>
+            </div>
+            <div class="mt-2.5">
+                <div class="text-xl font-bold text-slate-900 truncate">{{ stats.summary.best_carrier }}</div>
+                <p class="text-xs text-slate-500 mt-1">Highest punctuality</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Charts Row 1: Monthly Trend + Carrier Comparison -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Chart 1: Monthly On-Time Performance & Monsoon Trend -->
+        <div class="card-panel p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="font-bold text-sm text-slate-900">
+                        Monthly Delay Rates &amp; Monsoon Impact
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Tamil Nadu North-East Monsoon (Oct–Dec) vs Annual Trend</p>
+                </div>
+                <span class="text-xs bg-slate-100 text-slate-700 font-medium px-2 py-0.5 rounded border border-slate-200">12 Months</span>
+            </div>
+            <div class="h-64">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Chart 2: Airline Carrier Reliability -->
+        <div class="card-panel p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="font-bold text-sm text-slate-900">
+                        Airline Carrier On-Time Performance (OTP %)
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">IndiGo, Air India, Vistara, Akasa, SpiceJet, Alliance Air</p>
+                </div>
+                <span class="text-xs bg-slate-100 text-slate-700 font-medium px-2 py-0.5 rounded border border-slate-200">DGCA Metric</span>
+            </div>
+            <div class="h-64">
+                <canvas id="carrierChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Charts Row 2: Delay Root Causes + Hourly Departure Risk -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Chart 3: DGCA Delay Causes -->
+        <div class="card-panel p-6 lg:col-span-1">
+            <div class="mb-4">
+                <h3 class="font-bold text-sm text-slate-900">
+                    Delay Causes Breakdown
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Official DGCA Standard Categories</p>
+            </div>
+            <div class="h-52 relative flex items-center justify-center">
+                <canvas id="causesChart"></canvas>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mt-4 text-xs text-slate-600 pt-3 border-t border-slate-100">
+                <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-sm bg-blue-700 mr-2"></span> Weather</div>
+                <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-sm bg-slate-600 mr-2"></span> ATC Congestion</div>
+                <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-sm bg-slate-400 mr-2"></span> Late Turnaround</div>
+                <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-sm bg-slate-300 mr-2"></span> Operations</div>
+            </div>
+        </div>
+
+        <!-- Chart 4: Hourly Departure Delay Risk -->
+        <div class="card-panel p-6 lg:col-span-2">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="font-bold text-sm text-slate-900">
+                        Hourly Departure Delay Probability (24-Hour Cycle)
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Cascading turnaround delays accumulate towards Evening Peak (17:00 – 21:00)</p>
+                </div>
+                <span class="text-xs bg-slate-100 text-slate-700 font-medium px-2 py-0.5 rounded border border-slate-200">24 Hours</span>
+            </div>
+            <div class="h-52">
+                <canvas id="hourlyChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Tamil Nadu Route Performance Table with Filter -->
+    <div class="card-panel p-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
+            <div>
+                <h3 class="font-bold text-base text-slate-900">
+                    Tamil Nadu Flight Route Performance
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Coimbatore (CJB), Chennai (MAA), Madurai (IXM), Trichy (TRZ) Corridors</p>
+            </div>
+            <div class="flex items-center space-x-3 w-full sm:w-auto">
+                <div class="relative w-full sm:w-72">
+                    <input type="text" id="routeSearch" placeholder="Search routes (e.g. CJB, MAA, Mumbai)..." 
+                           class="w-full bg-white border border-slate-300 text-xs rounded-lg px-3 py-2 pl-8 text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-colors">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-2.5 text-xs"></i>
+                </div>
+                <a href="{{ url_for('routes_page') }}" class="whitespace-nowrap text-xs text-slate-900 hover:text-slate-700 font-semibold flex items-center">
+                    All Routes <i class="fa-solid fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto border border-slate-200 rounded-lg">
+            <table class="w-full text-left text-xs text-slate-700" id="routesTable">
+                <thead class="bg-slate-50 uppercase tracking-wider font-semibold text-slate-600 border-b border-slate-200">
+                    <tr>
+                        <th class="py-2.5 px-3.5">Flight Route</th>
+                        <th class="py-2.5 px-3.5">Distance</th>
+                        <th class="py-2.5 px-3.5">Flights Monitored</th>
+                        <th class="py-2.5 px-3.5">On-Time %</th>
+                        <th class="py-2.5 px-3.5">Delay %</th>
+                        <th class="py-2.5 px-3.5">Avg Delay</th>
+                        <th class="py-2.5 px-3.5 text-right">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200" id="routeTableBody">
+                    {% for route in stats.top_routes %}
+                    <tr class="hover:bg-slate-50 transition-colors route-row" data-route="{{ route.origin }} {{ route.dest }} {{ route.origin_city }} {{ route.dest_city }}">
+                        <td class="py-2.5 px-3.5 font-semibold text-slate-900">
+                            <span>{{ route.origin }}</span> ({{ route.origin_city }}) 
+                            <i class="fa-solid fa-arrow-right text-slate-400 mx-1 text-[10px]"></i> 
+                            <span>{{ route.dest }}</span> ({{ route.dest_city }})
+                        </td>
+                        <td class="py-2.5 px-3.5 text-slate-600">{{ route.distance_km }} km</td>
+                        <td class="py-2.5 px-3.5 text-slate-800 font-medium">{{ route.total_flights }}</td>
+                        <td class="py-2.5 px-3.5">
+                            <span class="font-semibold {% if route.on_time_pct >= 75 %}text-emerald-700{% else %}text-slate-800{% endif %}">
+                                {{ route.on_time_pct }}%
+                            </span>
+                        </td>
+                        <td class="py-2.5 px-3.5 text-slate-700">{{ route.delay_pct }}%</td>
+                        <td class="py-2.5 px-3.5 text-slate-700">{{ route.avg_delay|round(1) }} mins</td>
+                        <td class="py-2.5 px-3.5 text-right">
+                            {% if route.on_time_pct >= 78 %}
+                                <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">Punctual</span>
+                            {% elif route.on_time_pct >= 72 %}
+                                <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200">Moderate</span>
+                            {% else %}
+                                <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-rose-50 text-rose-800 border border-rose-200">Delay Prone</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const monthlyData = {{ stats.monthly_data | tojson }};
+    const carrierData = {{ stats.carrier_data | tojson }};
+    const reasonsData = {{ stats.reasons_data | tojson }};
+    const hourlyData = {{ stats.hourly_data | tojson }};
+
+    // Professional Publication Theme Defaults
+    Chart.defaults.color = '#475569';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.font.size = 11;
+
+    // 1. Monthly Performance Chart
+    new Chart(document.getElementById('monthlyChart'), {
+        type: 'bar',
+        data: {
+            labels: monthlyData.labels,
+            datasets: [
+                {
+                    label: 'Delay Rate % (Monsoon Impact)',
+                    data: monthlyData.delay_pct,
+                    backgroundColor: monthlyData.labels.map((_, i) => i >= 9 ? '#b91c1c' : '#334155'),
+                    borderRadius: 4,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'On-Time Performance %',
+                    data: monthlyData.on_time_pct,
+                    type: 'line',
+                    borderColor: '#15803d',
+                    backgroundColor: 'rgba(21, 128, 61, 0.05)',
+                    borderWidth: 2,
+                    tension: 0.2,
+                    pointRadius: 2.5,
+                    yAxisID: 'y'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top', labels: { boxWidth: 10, font: { size: 11, weight: '500' } } }
+            },
+            scales: {
+                x: { grid: { color: '#f1f5f9' }, ticks: { color: '#475569', font: { size: 10 } } },
+                y: { grid: { color: '#f1f5f9' }, min: 0, max: 100, ticks: { color: '#475569' } }
+            }
+        }
+    });
+
+    // 2. Carrier Comparison Chart
+    new Chart(document.getElementById('carrierChart'), {
+        type: 'bar',
+        data: {
+            labels: carrierData.labels,
+            datasets: [{
+                label: 'On-Time Performance Rate (%)',
+                data: carrierData.on_time_pct,
+                backgroundColor: '#1e3a8a',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { min: 50, max: 100, grid: { color: '#f1f5f9' }, ticks: { color: '#475569' } },
+                y: { grid: { display: false }, ticks: { color: '#0f172a', font: { weight: '500', size: 11 } } }
+            }
+        }
+    });
+
+    // 3. Delay Causes (Donut Chart)
+    new Chart(document.getElementById('causesChart'), {
+        type: 'doughnut',
+        data: {
+            labels: reasonsData.labels,
+            datasets: [{
+                data: reasonsData.percentages,
+                backgroundColor: [
+                    '#1e40af', // Weather
+                    '#475569', // ATC
+                    '#94a3b8', // Late aircraft
+                    '#cbd5e1'  // Operations
+                ],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return ` ${context.label}: ${context.raw}%`;
+                        }
+                    }
+                }
+            },
+            cutout: '65%'
+        }
+    });
+
+    // 4. Hourly Departure Risk Chart
+    new Chart(document.getElementById('hourlyChart'), {
+        type: 'line',
+        data: {
+            labels: hourlyData.hours,
+            datasets: [{
+                label: 'Delay Probability %',
+                data: hourlyData.delay_rate_pct,
+                borderColor: '#0f172a',
+                backgroundColor: 'rgba(15, 23, 42, 0.04)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.2,
+                pointRadius: 2,
+                pointBackgroundColor: '#0f172a'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { grid: { color: '#f1f5f9' }, ticks: { color: '#475569', font: { size: 10 } } },
+                y: { min: 0, max: 40, grid: { color: '#f1f5f9' }, ticks: { color: '#475569' } }
+            }
+        }
+    });
+
+    // Live search filter for route table
+    const routeSearch = document.getElementById('routeSearch');
+    const rows = document.querySelectorAll('.route-row');
+    if (routeSearch) {
+        routeSearch.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            rows.forEach(row => {
+                const text = row.getAttribute('data-route').toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        });
+    }
+</script>
+{% endblock %}

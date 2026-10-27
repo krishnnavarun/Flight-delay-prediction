@@ -1,0 +1,354 @@
+{% extends "base.html" %}
+
+{% block title %}Routes & Airport Network Explorer | Tamil Nadu Domestic Aviation{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <!-- Header Section -->
+    <div class="card-panel p-6 sm:p-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium mb-2">
+                    <i class="fa-solid fa-route text-slate-500"></i>
+                    <span>Tamil Nadu Aviation Corridors &amp; Hub Directory</span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                    Routes &amp; Airports Explorer
+                </h1>
+                <p class="text-slate-600 text-sm max-w-2xl mt-1 leading-relaxed">
+                    Corridor distances, scheduled gate-to-gate durations, historical punctuality, and operational airport infrastructure across Tamil Nadu and connected metropolitan hubs.
+                </p>
+            </div>
+            <div>
+                <a href="{{ url_for('predict_page') }}" class="inline-flex items-center px-3.5 py-1.5 text-xs font-semibold rounded-md text-white bg-slate-900 hover:bg-slate-800 transition-colors shadow-xs">
+                    <i class="fa-solid fa-calculator mr-1.5"></i> Predict Route Delay
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Route Quick Analyzer -->
+    <div class="card-panel p-6 sm:p-8">
+        <h2 class="text-base font-bold text-slate-900 mb-4 flex items-center">
+            <i class="fa-solid fa-calculator text-slate-500 mr-2"></i> Route Distance &amp; Punctuality Estimator
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                    Origin Airport
+                </label>
+                <select id="selOrigin" onchange="updateRouteInfo()" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 font-medium focus:outline-none focus:ring-1 focus:ring-slate-900">
+                    <option value="CJB" selected>Coimbatore (CJB) [Tamil Nadu]</option>
+                    <option value="MAA">Chennai (MAA) [Tamil Nadu]</option>
+                    <option value="IXM">Madurai (IXM) [Tamil Nadu]</option>
+                    <option value="TRZ">Tiruchirappalli (TRZ) [Tamil Nadu]</option>
+                    <option value="TCR">Tuticorin (TCR) [Tamil Nadu]</option>
+                    <option value="SXV">Salem (SXV) [Tamil Nadu]</option>
+                    <option value="BLR">Bengaluru (BLR)</option>
+                    <option value="BOM">Mumbai (BOM)</option>
+                    <option value="DEL">New Delhi (DEL)</option>
+                    <option value="HYD">Hyderabad (HYD)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                    Destination Airport
+                </label>
+                <select id="selDest" onchange="updateRouteInfo()" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 font-medium focus:outline-none focus:ring-1 focus:ring-slate-900">
+                    <option value="MAA" selected>Chennai (MAA) [Tamil Nadu]</option>
+                    <option value="CJB">Coimbatore (CJB) [Tamil Nadu]</option>
+                    <option value="IXM">Madurai (IXM) [Tamil Nadu]</option>
+                    <option value="TRZ">Tiruchirappalli (TRZ) [Tamil Nadu]</option>
+                    <option value="BLR">Bengaluru (BLR)</option>
+                    <option value="BOM">Mumbai (BOM)</option>
+                    <option value="DEL">New Delhi (DEL)</option>
+                    <option value="HYD">Hyderabad (HYD)</option>
+                </select>
+            </div>
+
+            <div>
+                <button type="button" onclick="updateRouteInfo()" class="w-full py-2 px-4 rounded-lg text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-colors shadow-xs flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-calculator"></i>
+                    <span>Calculate Corridor Metrics</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Dynamic Output Box -->
+        <div id="routeDetailsBox" class="mt-5 p-4 rounded-lg bg-slate-50 border border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+            <div class="space-y-1">
+                <span class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Great Circle Distance</span>
+                <div class="text-xl font-bold text-slate-900" id="resDistance">400 km</div>
+                <span class="text-xs text-slate-500">Direct distance</span>
+            </div>
+            <div class="space-y-1">
+                <span class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Scheduled Duration</span>
+                <div class="text-xl font-bold text-slate-900" id="resDuration">55 mins</div>
+                <span class="text-xs text-slate-500">Avg gate-to-gate</span>
+            </div>
+            <div class="space-y-1">
+                <span class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Historical On-Time</span>
+                <div class="text-xl font-bold text-emerald-700" id="resOtp">78.5%</div>
+                <span class="text-xs text-slate-500">Punctuality rate</span>
+            </div>
+            <div class="space-y-1">
+                <span class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Delay Vulnerability</span>
+                <div class="text-xl font-bold text-slate-800" id="resRisk">Low – Moderate</div>
+                <span class="text-xs text-slate-500">Weather &amp; Slot</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tamil Nadu Airport Profiles -->
+    <div class="space-y-4">
+        <div>
+            <h2 class="text-base font-bold text-slate-900">
+                Tamil Nadu Airport Network Profiles &amp; Infrastructure
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Runways, passenger volume, and operating direct corridors</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+            <!-- Card 1: Coimbatore (CJB) -->
+            <div class="card-panel p-5 space-y-3.5 card-panel-hover">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-xl font-bold text-slate-900">CJB</span>
+                        <h3 class="text-sm font-semibold text-slate-900 mt-0.5">Coimbatore International Airport</h3>
+                        <p class="text-xs text-slate-500">Peelamedu, Coimbatore &bull; Tamil Nadu</p>
+                    </div>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">Western TN</span>
+                </div>
+                <div class="space-y-2 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Runway:</span>
+                        <span class="font-medium text-slate-900">05/23 (2,990 m / 9,810 ft)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Annual Traffic:</span>
+                        <span class="font-medium text-slate-900">~3.0 Million Passengers</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Direct Corridors:</span>
+                        <span class="font-medium text-slate-900">MAA, BLR, BOM, DEL, HYD, GOI</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Weather Factor:</span>
+                        <span class="text-slate-700">SW &amp; NE Monsoon crosswinds</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Chennai (MAA) -->
+            <div class="card-panel p-5 space-y-3.5 card-panel-hover">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-xl font-bold text-slate-900">MAA</span>
+                        <h3 class="text-sm font-semibold text-slate-900 mt-0.5">Chennai International Airport</h3>
+                        <p class="text-xs text-slate-500">Meenambakkam, Chennai &bull; Tamil Nadu</p>
+                    </div>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">Primary Hub</span>
+                </div>
+                <div class="space-y-2 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Runways:</span>
+                        <span class="font-medium text-slate-900">07/25 (3,658 m) &amp; 12/30 (2,045 m)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Annual Traffic:</span>
+                        <span class="font-medium text-slate-900">~22 Million Passengers</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Direct Corridors:</span>
+                        <span class="font-medium text-slate-900">CJB, IXM, TRZ, BLR, BOM, DEL, HYD, CCU</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Weather Factor:</span>
+                        <span class="text-slate-700">NE Monsoon coastal rain (Oct–Dec)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Madurai (IXM) -->
+            <div class="card-panel p-5 space-y-3.5 card-panel-hover">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-xl font-bold text-slate-900">IXM</span>
+                        <h3 class="text-sm font-semibold text-slate-900 mt-0.5">Madurai Airport</h3>
+                        <p class="text-xs text-slate-500">Avaniyapuram, Madurai &bull; Tamil Nadu</p>
+                    </div>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">South TN</span>
+                </div>
+                <div class="space-y-2 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Runway:</span>
+                        <span class="font-medium text-slate-900">09/27 (2,285 m / 7,497 ft)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Annual Traffic:</span>
+                        <span class="font-medium text-slate-900">~1.4 Million Passengers</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Direct Corridors:</span>
+                        <span class="font-medium text-slate-900">MAA, BLR, BOM, DEL, HYD</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Weather Factor:</span>
+                        <span class="text-slate-700">Relatively stable dry climate</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 4: Tiruchirappalli (TRZ) -->
+            <div class="card-panel p-5 space-y-3.5 card-panel-hover">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-xl font-bold text-slate-900">TRZ</span>
+                        <h3 class="text-sm font-semibold text-slate-900 mt-0.5">Tiruchirappalli International</h3>
+                        <p class="text-xs text-slate-500">Trichy &bull; Central Tamil Nadu</p>
+                    </div>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">Central TN</span>
+                </div>
+                <div class="space-y-2 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Runway:</span>
+                        <span class="font-medium text-slate-900">09/27 (2,480 m / 8,136 ft)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Annual Traffic:</span>
+                        <span class="font-medium text-slate-900">~1.8 Million Passengers</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Direct Corridors:</span>
+                        <span class="font-medium text-slate-900">MAA, BLR, BOM, DEL, SE Asia</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Weather Factor:</span>
+                        <span class="text-slate-700">Moderate monsoon rain</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 5: Tuticorin (TCR) & Salem (SXV) -->
+            <div class="card-panel p-5 space-y-3.5 card-panel-hover">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-xl font-bold text-slate-900">TCR / SXV</span>
+                        <h3 class="text-sm font-semibold text-slate-900 mt-0.5">Tuticorin &amp; Salem Feeder Hubs</h3>
+                        <p class="text-xs text-slate-500">Thoothukudi &amp; Salem &bull; Tamil Nadu</p>
+                    </div>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">UDAN Regional</span>
+                </div>
+                <div class="space-y-2 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Aircraft:</span>
+                        <span class="font-medium text-slate-900">ATR-72 / Q400 Turboprops</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Scheme:</span>
+                        <span class="font-medium text-slate-900">UDAN Regional Connectivity</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Routes:</span>
+                        <span class="font-medium text-slate-900">MAA (Chennai), BLR (Bengaluru)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Turnaround:</span>
+                        <span class="text-slate-700">Quick 25-min ground turnaround</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 6: Connected Metros -->
+            <div class="card-panel p-5 space-y-3.5 card-panel-hover">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-xl font-bold text-slate-900">BLR / BOM / DEL</span>
+                        <h3 class="text-sm font-semibold text-slate-900 mt-0.5">Primary Connecting Metros</h3>
+                        <p class="text-xs text-slate-500">Bengaluru, Mumbai, New Delhi</p>
+                    </div>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">Metros</span>
+                </div>
+                <div class="space-y-2 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Cascading Delay:</span>
+                        <span class="font-medium text-slate-900">High Reactionary Influence</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Delhi Fog:</span>
+                        <span class="text-slate-700">Dec–Jan CAT III-B holds</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Mumbai/BLR:</span>
+                        <span class="text-slate-700">Peak hour runway congestion</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Impact:</span>
+                        <span class="font-medium text-slate-900">Cascades directly into CJB &amp; MAA</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const ROUTE_DATA = {
+        'CJB-MAA': { dist: 400, dur: '55 mins', otp: '78.5%', risk: 'Low – Moderate' },
+        'MAA-CJB': { dist: 400, dur: '55 mins', otp: '79.2%', risk: 'Low' },
+        'CJB-BLR': { dist: 260, dur: '45 mins', otp: '82.1%', risk: 'Low' },
+        'BLR-CJB': { dist: 260, dur: '45 mins', otp: '81.4%', risk: 'Low' },
+        'CJB-BOM': { dist: 990, dur: '105 mins', otp: '74.2%', risk: 'Moderate' },
+        'BOM-CJB': { dist: 990, dur: '105 mins', otp: '73.8%', risk: 'Moderate' },
+        'CJB-DEL': { dist: 1950, dur: '175 mins', otp: '71.5%', risk: 'High (Winter Fog)' },
+        'DEL-CJB': { dist: 1950, dur: '175 mins', otp: '70.8%', risk: 'High (Winter Fog)' },
+        'CJB-HYD': { dist: 730, dur: '85 mins', otp: '77.8%', risk: 'Low – Moderate' },
+        'HYD-CJB': { dist: 730, dur: '85 mins', otp: '78.0%', risk: 'Low' },
+        'MAA-DEL': { dist: 1760, dur: '160 mins', otp: '72.3%', risk: 'High (Slot Congestion)' },
+        'DEL-MAA': { dist: 1760, dur: '160 mins', otp: '71.9%', risk: 'High' },
+        'MAA-BOM': { dist: 1030, dur: '115 mins', otp: '73.5%', risk: 'Moderate' },
+        'BOM-MAA': { dist: 1030, dur: '115 mins', otp: '74.0%', risk: 'Moderate' },
+        'MAA-BLR': { dist: 290, dur: '50 mins', otp: '81.0%', risk: 'Low' },
+        'BLR-MAA': { dist: 290, dur: '50 mins', otp: '80.5%', risk: 'Low' },
+        'IXM-MAA': { dist: 420, dur: '60 mins', otp: '79.4%', risk: 'Low' },
+        'MAA-IXM': { dist: 420, dur: '60 mins', otp: '80.1%', risk: 'Low' },
+        'TRZ-MAA': { dist: 320, dur: '50 mins', otp: '80.8%', risk: 'Low' },
+        'MAA-TRZ': { dist: 320, dur: '50 mins', otp: '81.2%', risk: 'Low' },
+        'TCR-MAA': { dist: 520, dur: '75 mins', otp: '76.4%', risk: 'Moderate' },
+        'MAA-TCR': { dist: 520, dur: '75 mins', otp: '76.0%', risk: 'Moderate' },
+        'SXV-MAA': { dist: 280, dur: '45 mins', otp: '75.2%', risk: 'Moderate' },
+        'MAA-SXV': { dist: 280, dur: '45 mins', otp: '75.5%', risk: 'Moderate' }
+    };
+
+    function updateRouteInfo() {
+        const orig = document.getElementById('selOrigin').value;
+        const dest = document.getElementById('selDest').value;
+
+        if (orig === dest) {
+            alert('Please select two distinct airports.');
+            return;
+        }
+
+        const key = `${orig}-${dest}`;
+        const data = ROUTE_DATA[key] || {
+            dist: 650,
+            dur: '75 mins',
+            otp: '76.0%',
+            risk: 'Moderate'
+        };
+
+        document.getElementById('resDistance').textContent = `${data.dist} km`;
+        document.getElementById('resDuration').textContent = data.dur;
+        document.getElementById('resOtp').textContent = data.otp;
+        document.getElementById('resRisk').textContent = data.risk;
+    }
+</script>
+{% endblock %}
