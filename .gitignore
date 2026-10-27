@@ -1,4 +1,4 @@
-# Environments
+# Virtual Environments & Packages
 venv/
 env/
 .env
@@ -8,16 +8,16 @@ lib64/
 Include/
 pyvenv.cfg
 
-# Python
+# Python Cache & Bytecode
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 
-# Jupyter Notebook
+# Jupyter Notebook Checkpoints
 .ipynb_checkpoints/
 
-# OS generated files
+# Operating System Files
 .DS_Store
 .DS_Store?
 ._*
@@ -26,14 +26,8 @@ __pycache__/
 ehthumbs.db
 Thumbs.db
 
-# IDEs
+# IDEs & Editors
 .vscode/
 .idea/
 *.swp
-
-# Optional: Ignore large datasets if you don't want them in the repo
-# Data/*.csv
-# Data/*.xlsx
-
-# Note: model.pkl is relatively small (~477KB), so you can keep it in the repo.
-
+*.swo
